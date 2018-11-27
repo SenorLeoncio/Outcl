@@ -213,6 +213,9 @@ class Reporter :
 				if col == 4 :
 					self.dCJParameters[strCJ]['D'] = strParam
 
+				if col == 5 :
+					self.dCJParameters[strCJ]['E'] = strParam
+
 			row += 1
 
 		#dCJParameters:
@@ -275,14 +278,10 @@ class Reporter :
 			if strCJ == None :
 				break
 			
-			col = 2
-			# iterate through all columns (days)
-			while True :
-				dtDT = ws.Cells(2,col).Value
-				if dtDT == None :
-					break
+			#col = 2
 
-				strDT = dtDT.strftime('%Y-%m-%d') # because Excel draws '2018-07-12' but returns .Value = '2018-07-12 00:00:00+00:00' (datetime)
+			for strDT in self.dDatesToProcess :
+				col = self.dDatesColumns[strDT]
 
 				if (strCJ, strDT) in self.dCJ :
 					# if we have something to populate into this Excel cell:
@@ -308,15 +307,20 @@ class Reporter :
 
 						if 'C' in dParameter and dParameter['C'] == 'Y' :
 							if 'S' not in self.dCJ[ strCJ, strDT ][0] :
-								#ws.Cells(row,col).Interior.Color = getattr(win32com.client.constants, dConfig['HighlightFailure'])
 								ws.Cells(row,col).Interior.Color = self.dConfig['HighlightFailure']
 							
 						if 'D' in dParameter :
-							#ws.Cells(row,col).Interior.Color = getattr(win32com.client.constants, dParameter['D'])
 							ws.Cells(row,col).Interior.Color = dParameter['D']
 
-				col += 1
-			
+				else :
+					# if we do not have anything to populate into this cell... we may still want to highlight the cell if respective param is configured
+
+					if strCJ in self.dCJParameters :
+						dParameter = self.dCJParameters[strCJ]
+
+						if 'E' in dParameter and dParameter['E'] == 'Y' :
+								ws.Cells(row,col).Interior.Color = self.dConfig['HighlightFailure']
+
 			row += 1
 
 		for (k,v) in self.dDatesToProcess.items() :
